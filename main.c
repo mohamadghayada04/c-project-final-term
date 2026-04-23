@@ -7,7 +7,7 @@
 #define RED "\033[1;31m"
 #define RESET "\033[0m"
 
-// STRUCT (required)
+// STRUCT
 struct Question {
     char text[100];
     char a[50];
@@ -18,7 +18,7 @@ struct Question {
     int difficulty;
 };
 
-// FUNCTION: read questions from file
+// READ QUESTIONS (just display file)
 void readQuestions() {
     FILE *file = fopen("questions.txt", "r");
 
@@ -41,7 +41,7 @@ void readQuestions() {
     getchar(); getchar();
 }
 
-// FUNCTION: save score to file
+// SAVE SCORE
 void saveScore(int score) {
     FILE *file = fopen("leaderboard.txt", "a");
 
@@ -60,7 +60,7 @@ void saveScore(int score) {
     fclose(file);
 }
 
-// FUNCTION: show leaderboard
+// SHOW LEADERBOARD
 void showLeaderboard() {
     FILE *file = fopen("leaderboard.txt", "r");
 
@@ -83,31 +83,62 @@ void showLeaderboard() {
     getchar(); getchar();
 }
 
-// FUNCTION: start simple game
+// START GAME (FULL VERSION USING STRUCT)
 void startGame() {
-    int score = 0;
-    int answer;
+    FILE *file = fopen("questions.txt", "r");
 
-    printf("Simple Question: What is 2+2?\n");
-    printf("1. 3\n2. 4\n3. 5\n");
-
-    printf("Choose (1-3): ");
-    scanf("%d", &answer);
-
-    // VALIDATION
-    if (answer < 1 || answer > 3) {
-        printf(RED "Invalid choice!\n" RESET);
+    if (file == NULL) {
+        printf("Error opening questions file!\n");
         return;
     }
 
-    if (answer == 2) {
-        score += 1;
-        printf(GREEN "Correct!\n" RESET);
-    } else {
-        printf(RED "Wrong!\n" RESET);
+    struct Question q[100];
+    int count = 0;
+
+    // READ QUESTIONS INTO STRUCT
+    while (fscanf(file, " %[^\n]\n%[^\n]\n%[^\n]\n%[^\n]\n%[^\n]\n%d\n%d\n",
+        q[count].text,
+        q[count].a,
+        q[count].b,
+        q[count].c,
+        q[count].d,
+        &q[count].correct,
+        &q[count].difficulty) == 7) {
+
+        count++;
     }
 
-    printf("Your score: %d\n", score);
+    fclose(file);
+
+    int score = 0;
+    int answer;
+
+    // LOOP THROUGH QUESTIONS
+    for (int i = 0; i < count; i++) {
+        printf("\nQuestion %d:\n", i + 1);
+        printf("%s\n", q[i].text);
+        printf("1. %s\n2. %s\n3. %s\n4. %s\n",
+               q[i].a, q[i].b, q[i].c, q[i].d);
+
+        printf("Choose (1-4): ");
+        scanf("%d", &answer);
+
+        // VALIDATION
+        if (answer < 1 || answer > 4) {
+            printf(RED "Invalid choice! Try again.\n" RESET);
+            i--; // repeat same question
+            continue;
+        }
+
+        if (answer == q[i].correct) {
+            printf(GREEN "Correct!\n" RESET);
+            score++;
+        } else {
+            printf(RED "Wrong!\n" RESET);
+        }
+    }
+
+    printf("\nFinal score: %d/%d\n", score, count);
 
     saveScore(score);
 
@@ -120,7 +151,7 @@ int main() {
     int choice;
 
     while (1) {
-        system("clear");
+        system("cls"); // for Windows (CodeBlocks)
 
         printf("==== TRIVIA APP ====\n");
         printf("1. Start Game\n");
@@ -140,15 +171,12 @@ int main() {
 
         switch (choice) {
             case 1:
-                system("clear");
                 startGame();
                 break;
             case 2:
-                system("clear");
                 readQuestions();
                 break;
             case 3:
-                system("clear");
                 showLeaderboard();
                 break;
             case 4:
