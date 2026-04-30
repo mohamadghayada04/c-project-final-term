@@ -114,32 +114,45 @@ void startGame() {
     int answer;
     int startIndex = 0;
 
-    // 🔥 LOAD PROGRESS
+    // LOAD PROGRESS
     FILE *progress = fopen("progress.txt", "r");
     if (progress != NULL) {
         fscanf(progress, "%d %d", &startIndex, &score);
         fclose(progress);
 
-        printf("Continue previous game? (1 = Yes, 0 = No): ");
-        int choice;
-        scanf("%d", &choice);
+        if (startIndex > 0) {
+            printf("Continue previous game? (1 = Yes, 0 = No): ");
+            int choice;
+            scanf("%d", &choice);
 
-        if (choice == 0) {
-            startIndex = 0;
-            score = 0;
+            if (choice == 0) {
+                startIndex = 0;
+                score = 0;
+            }
         }
     }
 
-    // LOOP FROM SAVED POSITION
+    // GAME LOOP
     for (int i = startIndex; i < count; i++) {
         printf("\nQuestion %d:\n", i + 1);
         printf("%s\n", q[i].text);
         printf("1. %s\n2. %s\n3. %s\n4. %s\n",
                q[i].a, q[i].b, q[i].c, q[i].d);
 
-        printf("Choose (1-4): ");
+        printf("Choose (1-4) or 0 to EXIT: ");
         scanf("%d", &answer);
 
+        // 🔴 EXIT MID-GAME
+        if (answer == 0) {
+            FILE *progress = fopen("progress.txt", "w");
+            fprintf(progress, "%d %d", i, score);
+            fclose(progress);
+
+            printf("Game saved! You can continue later.\n");
+            return;
+        }
+
+        // VALIDATION
         if (answer < 1 || answer > 4) {
             printf(RED "Invalid choice!\n" RESET);
             i--;
@@ -152,18 +165,14 @@ void startGame() {
         } else {
             printf(RED "Wrong!\n" RESET);
         }
-
-        // 🔥 SAVE PROGRESS AFTER EACH QUESTION
-        progress = fopen("progress.txt", "w");
-        fprintf(progress, "%d %d", i + 1, score);
-        fclose(progress);
     }
 
+    // FINISHED GAME
     printf("\nFinal score: %d/%d\n", score, count);
 
     saveScore(score);
 
-    // 🔥 CLEAR PROGRESS AFTER FINISH
+    // CLEAR PROGRESS
     progress = fopen("progress.txt", "w");
     fprintf(progress, "0 0");
     fclose(progress);
