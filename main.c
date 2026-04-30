@@ -85,6 +85,11 @@ void showLeaderboard() {
 
 // START GAME (FULL VERSION USING STRUCT)
 void startGame() {
+    char name[50];
+
+    printf("Enter your name: ");
+    scanf("%s", name);
+
     FILE *file = fopen("questions.txt", "r");
 
     if (file == NULL) {
@@ -95,7 +100,6 @@ void startGame() {
     struct Question q[100];
     int count = 0;
 
-    // READ QUESTIONS
     while (fscanf(file, " %[^\n]\n%[^\n]\n%[^\n]\n%[^\n]\n%[^\n]\n%d\n%d\n",
         q[count].text,
         q[count].a,
@@ -111,17 +115,18 @@ void startGame() {
     fclose(file);
 
     int score = 0;
-    int answer;
     int startIndex = 0;
+    int answer;
+    char savedName[50];
 
-    // LOAD PROGRESS
+    // 🔥 LOAD PROGRESS
     FILE *progress = fopen("progress.txt", "r");
     if (progress != NULL) {
-        fscanf(progress, "%d %d", &startIndex, &score);
+        fscanf(progress, "%s %d %d", savedName, &startIndex, &score);
         fclose(progress);
 
-        if (startIndex > 0) {
-            printf("Continue previous game? (1 = Yes, 0 = No): ");
+        if (strcmp(name, savedName) == 0 && startIndex > 0) {
+            printf("Continue your previous game? (1 = Yes, 0 = No): ");
             int choice;
             scanf("%d", &choice);
 
@@ -142,17 +147,15 @@ void startGame() {
         printf("Choose (1-4) or 0 to EXIT: ");
         scanf("%d", &answer);
 
-        // 🔴 EXIT MID-GAME
         if (answer == 0) {
             FILE *progress = fopen("progress.txt", "w");
-            fprintf(progress, "%d %d", i, score);
+            fprintf(progress, "%s %d %d", name, i, score);
             fclose(progress);
 
-            printf("Game saved! You can continue later.\n");
+            printf("Game saved for %s!\n", name);
             return;
         }
 
-        // VALIDATION
         if (answer < 1 || answer > 4) {
             printf(RED "Invalid choice!\n" RESET);
             i--;
@@ -167,14 +170,17 @@ void startGame() {
         }
     }
 
-    // FINISHED GAME
+    // FINISH GAME
     printf("\nFinal score: %d/%d\n", score, count);
 
-    saveScore(score);
+    // SAVE FINAL SCORE
+    FILE *leader = fopen("leaderboard.txt", "a");
+    fprintf(leader, "%s %d\n", name, score);
+    fclose(leader);
 
     // CLEAR PROGRESS
     progress = fopen("progress.txt", "w");
-    fprintf(progress, "0 0");
+    fprintf(progress, "none 0 0");
     fclose(progress);
 
     printf("\nPress ENTER...");
