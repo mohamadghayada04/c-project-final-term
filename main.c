@@ -95,7 +95,7 @@ void startGame() {
     struct Question q[100];
     int count = 0;
 
-    // READ QUESTIONS INTO STRUCT
+    // READ QUESTIONS
     while (fscanf(file, " %[^\n]\n%[^\n]\n%[^\n]\n%[^\n]\n%[^\n]\n%d\n%d\n",
         q[count].text,
         q[count].a,
@@ -112,9 +112,26 @@ void startGame() {
 
     int score = 0;
     int answer;
+    int startIndex = 0;
 
-    // LOOP THROUGH QUESTIONS
-    for (int i = 0; i < count; i++) {
+    // 🔥 LOAD PROGRESS
+    FILE *progress = fopen("progress.txt", "r");
+    if (progress != NULL) {
+        fscanf(progress, "%d %d", &startIndex, &score);
+        fclose(progress);
+
+        printf("Continue previous game? (1 = Yes, 0 = No): ");
+        int choice;
+        scanf("%d", &choice);
+
+        if (choice == 0) {
+            startIndex = 0;
+            score = 0;
+        }
+    }
+
+    // LOOP FROM SAVED POSITION
+    for (int i = startIndex; i < count; i++) {
         printf("\nQuestion %d:\n", i + 1);
         printf("%s\n", q[i].text);
         printf("1. %s\n2. %s\n3. %s\n4. %s\n",
@@ -123,10 +140,9 @@ void startGame() {
         printf("Choose (1-4): ");
         scanf("%d", &answer);
 
-        // VALIDATION
         if (answer < 1 || answer > 4) {
-            printf(RED "Invalid choice! Try again.\n" RESET);
-            i--; // repeat same question
+            printf(RED "Invalid choice!\n" RESET);
+            i--;
             continue;
         }
 
@@ -136,16 +152,25 @@ void startGame() {
         } else {
             printf(RED "Wrong!\n" RESET);
         }
+
+        // 🔥 SAVE PROGRESS AFTER EACH QUESTION
+        progress = fopen("progress.txt", "w");
+        fprintf(progress, "%d %d", i + 1, score);
+        fclose(progress);
     }
 
     printf("\nFinal score: %d/%d\n", score, count);
 
     saveScore(score);
 
+    // 🔥 CLEAR PROGRESS AFTER FINISH
+    progress = fopen("progress.txt", "w");
+    fprintf(progress, "0 0");
+    fclose(progress);
+
     printf("\nPress ENTER...");
     getchar(); getchar();
 }
-
 // MAIN MENU
 int main() {
     int choice;
